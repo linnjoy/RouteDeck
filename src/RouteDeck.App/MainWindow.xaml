@@ -1,0 +1,163 @@
+﻿<ui:FluentWindow x:Class="RouteDeck.App.MainWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 xmlns:vm="clr-namespace:RouteDeck.App.ViewModels"
+                 xmlns:views="clr-namespace:RouteDeck.App.Views"
+                 mc:Ignorable="d"
+                 d:DataContext="{d:DesignInstance vm:MainViewModel}"
+                 Title="RouteDeck"
+                 Icon="pack://application:,,,/Assets/RouteDeck.ico"
+                 Width="1280" Height="800" MinWidth="960" MinHeight="600"
+                 ExtendsContentIntoTitleBar="True"
+                 WindowBackdropType="Mica"
+                 WindowCornerPreference="Round"
+                 WindowStartupLocation="CenterScreen">
+    <ui:FluentWindow.InputBindings>
+        <KeyBinding Key="L" Modifiers="Control" Command="{Binding FocusQueryCommand, RelativeSource={RelativeSource AncestorType=ui:FluentWindow}}" />
+    </ui:FluentWindow.InputBindings>
+    <ui:FluentWindow.Resources>
+        <DataTemplate DataType="{x:Type vm:RoutesViewModel}">
+            <views:RoutesView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PathViewModel}">
+            <views:PathView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:HistoryViewModel}">
+            <views:HistoryView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:OverviewViewModel}">
+            <views:OverviewView />
+        </DataTemplate>
+    </ui:FluentWindow.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Grid.Row="0" Title="RouteDeck · 路由管理">
+            <ui:TitleBar.Icon>
+                <ui:ImageIcon Source="pack://application:,,,/Assets/RouteDeck-32.png" Width="18" Height="18" />
+            </ui:TitleBar.Icon>
+        </ui:TitleBar>
+
+        <!-- Top bar: service status, quick path lookup -->
+        <Grid Grid.Row="1" Margin="16,4,16,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Ellipse Width="10" Height="10" Margin="0,0,8,0">
+                    <Ellipse.Style>
+                        <Style TargetType="Ellipse">
+                            <Setter Property="Fill" Value="#BA7517" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Connection.CanWrite}" Value="True">
+                                    <Setter Property="Fill" Value="#1D9E75" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Ellipse.Style>
+                </Ellipse>
+                <TextBlock Text="{Binding Connection.StatusText}" VerticalAlignment="Center" />
+                <ui:Button Margin="12,0,0,0" Padding="10,4" Content="启动服务" Command="{Binding StartServiceCommand}"
+                           Visibility="{Binding Connection.IsOnline, Converter={StaticResource InverseBoolToVisibility}}" />
+            </StackPanel>
+            <ui:TextBox x:Name="QueryBox" Grid.Column="1" Margin="24,0" MaxWidth="560"
+                        PlaceholderText="查询路径：输入 IP、域名或 IP:端口（Ctrl+L）"
+                        Icon="{ui:SymbolIcon Search24}"
+                        Text="{Binding QuickQuery, UpdateSourceTrigger=PropertyChanged}">
+                <ui:TextBox.InputBindings>
+                    <KeyBinding Key="Enter" Command="{Binding QuickLookupCommand}" />
+                </ui:TextBox.InputBindings>
+            </ui:TextBox>
+            <ui:Button Grid.Column="2" Content="添加路由" Icon="{ui:SymbolIcon Add24}" Appearance="Primary"
+                       Command="{Binding Routes.AddCommand}" />
+        </Grid>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="180" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <ListBox Grid.Column="0" Margin="8,0,0,8" ItemsSource="{Binding NavItems}" SelectedItem="{Binding SelectedNav}"
+                     Background="Transparent" BorderThickness="0">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                        <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
+                        <Setter Property="Padding" Value="10,8" />
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:NavItem}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="{Binding Symbol}" FontSize="18" Margin="0,0,10,0" />
+                            <StackPanel>
+                                <TextBlock Text="{Binding Title}" />
+                                <TextBlock Text="{Binding Hint}" FontSize="11" Style="{StaticResource Muted}"
+                                           Visibility="{Binding Hint, Converter={StaticResource NullToVisibility}}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <Border Grid.Column="1" Margin="8,0,8,8" CornerRadius="8" Padding="16"
+                    Background="{DynamicResource ApplicationBackgroundBrush}"
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+                <ContentControl Content="{Binding SelectedNav.Page}" />
+            </Border>
+        </Grid>
+
+        <!-- Notifications -->
+        <ItemsControl Grid.Row="2" ItemsSource="{Binding Notices}" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                      Margin="0,0,24,24" Width="420" Panel.ZIndex="5">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:Notice}">
+                    <ui:InfoBar Title="{Binding Title}" Message="{Binding Message}" IsOpen="True" IsClosable="True" Margin="0,6,0,0"
+                                Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
+                        <ui:InfoBar.Style>
+                            <Style TargetType="ui:InfoBar" BasedOn="{StaticResource {x:Type ui:InfoBar}}">
+                                <Setter Property="Severity" Value="Informational" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Level}" Value="Success"><Setter Property="Severity" Value="Success" /></DataTrigger>
+                                    <DataTrigger Binding="{Binding Level}" Value="Warning"><Setter Property="Severity" Value="Warning" /></DataTrigger>
+                                    <DataTrigger Binding="{Binding Level}" Value="Error"><Setter Property="Severity" Value="Error" /></DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ui:InfoBar.Style>
+                    </ui:InfoBar>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- Lockout protection countdown -->
+        <Grid Grid.Row="0" Grid.RowSpan="3" Panel.ZIndex="10" Background="#80000000"
+              Visibility="{Binding HasPending, Converter={StaticResource BoolToVisibility}}">
+            <Border Width="480" Padding="24" CornerRadius="8" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="确认保留这次更改？" Style="{StaticResource SectionTitle}" />
+                    <TextBlock Text="{Binding Pending.Description}" TextWrapping="Wrap" Margin="0,0,0,6" />
+                    <TextBlock Text="{Binding Pending.Reason}" Style="{StaticResource Muted}" Margin="0,0,0,12" />
+                    <TextBlock Style="{StaticResource Muted}" Margin="0,0,0,16">
+                        <Run Text="如果网络已经断开，什么都不用做：" /><Run Text="{Binding PendingSeconds, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=" 秒后 RouteDeck 服务会自动恢复。" />
+                    </TextBlock>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <ui:Button Content="立即恢复" Margin="0,0,8,0" Command="{Binding RevertPendingCommand}" />
+                        <ui:Button Content="保留更改" Appearance="Primary" Command="{Binding KeepPendingCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</ui:FluentWindow>

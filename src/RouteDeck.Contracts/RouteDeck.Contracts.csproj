@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\RouteDeck.Core\RouteDeck.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="StreamJsonRpc" Version="2.17.11" />
+  </ItemGroup>
+</Project>

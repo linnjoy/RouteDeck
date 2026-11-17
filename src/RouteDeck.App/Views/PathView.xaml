@@ -1,0 +1,166 @@
+<UserControl x:Class="RouteDeck.App.Views.PathView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:vm="clr-namespace:RouteDeck.App.ViewModels"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:PathViewModel}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="1000" HorizontalAlignment="Stretch">
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ui:TextBox PlaceholderText="IP、域名或 IP:端口，例如 10.0.1.66:81" Icon="{ui:SymbolIcon Search24}"
+                            Text="{Binding Target, UpdateSourceTrigger=PropertyChanged}">
+                    <ui:TextBox.InputBindings>
+                        <KeyBinding Key="Enter" Command="{Binding LookupCommand}" />
+                    </ui:TextBox.InputBindings>
+                </ui:TextBox>
+                <ui:Button Grid.Column="1" Margin="8,0,0,0" Content="查询" Appearance="Primary" Command="{Binding LookupCommand}" />
+            </Grid>
+            <TextBlock Text="{Binding Error}" Foreground="#E24B4A" Margin="0,0,0,8" TextWrapping="Wrap"
+                       Visibility="{Binding Error, Converter={StaticResource NullToVisibility}}" />
+            <ui:ProgressRing IsIndeterminate="True" Width="24" Height="24" HorizontalAlignment="Left" Margin="0,0,0,8"
+                             Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+
+            <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,8"
+                       Text="查询会说明三件事：系统路由把流量送到哪里、各类程序会不会先交给代理、以及（输入端口时）每一层是否连得通。查询和测试都是只读的，不会修改任何设置。"
+                       Visibility="{Binding HasResult, Converter={StaticResource InverseBoolToVisibility}}" />
+
+            <StackPanel Visibility="{Binding HasResult, Converter={StaticResource BoolToVisibility}}">
+                <!-- 1. System route -->
+                <Border Padding="14" CornerRadius="6" Margin="0,0,0,12" BorderThickness="1"
+                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                    <StackPanel>
+                        <TextBlock Text="① 系统路由路径" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Text="{Binding ResolvedNote}" Style="{StaticResource Muted}" Margin="0,0,0,6"
+                                   Visibility="{Binding ResolvedNote, Converter={StaticResource NullToVisibility}}" />
+                        <TextBlock Text="{Binding RouteSummary}" FontSize="15" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding Explanation}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+                        <TextBlock Text="{Binding SystemMismatch}" Foreground="#BA7517" TextWrapping="Wrap" Margin="0,6,0,0"
+                                   Visibility="{Binding SystemMismatch, Converter={StaticResource NullToVisibility}}" />
+                        <Grid Margin="0,12,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="160" />
+                                <ColumnDefinition Width="160" />
+                                <ColumnDefinition Width="150" />
+                                <ColumnDefinition Width="80" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="候选路由" Style="{StaticResource Muted}" />
+                            <TextBlock Grid.Column="1" Text="网卡" Style="{StaticResource Muted}" />
+                            <TextBlock Grid.Column="2" Text="网关" Style="{StaticResource Muted}" />
+                            <TextBlock Grid.Column="3" Text="有效跃点" Style="{StaticResource Muted}" />
+                            <TextBlock Grid.Column="4" Text="结果" Style="{StaticResource Muted}" />
+                        </Grid>
+                        <ItemsControl ItemsSource="{Binding Candidates}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:CandidateRow}">
+                                    <Grid Margin="0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="160" />
+                                            <ColumnDefinition Width="160" />
+                                            <ColumnDefinition Width="150" />
+                                            <ColumnDefinition Width="80" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.Style>
+                                            <Style TargetType="Grid">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsWinner}" Value="True">
+                                                        <Setter Property="TextElement.FontWeight" Value="SemiBold" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Grid.Style>
+                                        <TextBlock Text="{Binding Destination}" Style="{StaticResource Mono}" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Adapter}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Grid.Column="2" Text="{Binding Gateway}" Style="{StaticResource Mono}" />
+                                        <TextBlock Grid.Column="3" Text="{Binding EffectiveMetric}" />
+                                        <TextBlock Grid.Column="4" Text="{Binding Reason}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <ui:Button Content="为这个目标添加直连路由…" Icon="{ui:SymbolIcon Branch24}" Margin="0,0,8,0" Command="{Binding AddBypassCommand}" />
+                            <ui:Button Content="在路由表中查看" Appearance="Transparent" Command="{Binding ShowInTableCommand}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- 2. Proxy -->
+                <Border Padding="14" CornerRadius="6" Margin="0,0,0,12" BorderThickness="1"
+                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                    <StackPanel>
+                        <TextBlock Text="② 程序实际路径（代理影响，只读）" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Text="{Binding ProxyConclusion}" TextWrapping="Wrap" Margin="0,0,0,8" />
+                        <ItemsControl ItemsSource="{Binding ProxyRows}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:ProxyRow}">
+                                    <Grid Margin="0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="220" />
+                                            <ColumnDefinition Width="260" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Channel}" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Verdict}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                        <TextBlock Grid.Column="2" Text="{Binding Reason}" Style="{StaticResource Muted}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- 3. Connectivity -->
+                <Border Padding="14" CornerRadius="6" BorderThickness="1"
+                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                    <StackPanel>
+                        <Grid>
+                            <TextBlock Text="③ 分层连通性测试" Style="{StaticResource SectionTitle}" />
+                            <ui:Button HorizontalAlignment="Right" Content="开始测试" Icon="{ui:SymbolIcon Play24}" Command="{Binding ProbeCommand}" />
+                        </Grid>
+                        <TextBlock Style="{StaticResource Muted}" Text="依次检查：路由 → 网关 → TCP 端口 → HTTP，直连和经代理分别测试。需要在查询中带上端口。" />
+                        <TextBlock Text="{Binding ProbeSummary}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,10,0,6"
+                                   Visibility="{Binding ProbeSummary, Converter={StaticResource NullToVisibility}}" />
+                        <ItemsControl ItemsSource="{Binding ProbeRows}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:ProbeRow}">
+                                    <Grid Margin="0,3">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="110" />
+                                            <ColumnDefinition Width="70" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="70" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Layer}" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Status}" FontWeight="SemiBold">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Kind}" Value="Ok"><Setter Property="Foreground" Value="#1D9E75" /></DataTrigger>
+                                                        <DataTrigger Binding="{Binding Kind}" Value="Failed"><Setter Property="Foreground" Value="#E24B4A" /></DataTrigger>
+                                                        <DataTrigger Binding="{Binding Kind}" Value="Timeout"><Setter Property="Foreground" Value="#E24B4A" /></DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Grid.Column="2" Text="{Binding Detail}" TextWrapping="Wrap" />
+                                        <TextBlock Grid.Column="3" Text="{Binding Elapsed}" Style="{StaticResource Muted}" HorizontalAlignment="Right" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

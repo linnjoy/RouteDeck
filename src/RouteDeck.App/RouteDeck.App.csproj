@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <AssemblyName>RouteDeck</AssemblyName>
+    <RootNamespace>RouteDeck.App</RootNamespace>
+    <ApplicationIcon>$(MSBuildThisFileDirectory)..\..\assets\RouteDeck.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Resource Include="$(MSBuildThisFileDirectory)..\..\assets\RouteDeck.ico" Link="Assets\RouteDeck.ico" />
+    <Resource Include="$(MSBuildThisFileDirectory)..\..\assets\RouteDeck-32.png" Link="Assets\RouteDeck-32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="WPF-UI" Version="3.0.5" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RouteDeck.Contracts\RouteDeck.Contracts.csproj" />
+  </ItemGroup>
+</Project>

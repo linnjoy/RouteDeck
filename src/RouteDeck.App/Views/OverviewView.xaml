@@ -1,0 +1,54 @@
+<UserControl x:Class="RouteDeck.App.Views.OverviewView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:RouteDeck.App.ViewModels"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:OverviewViewModel}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel>
+            <TextBlock Text="{Binding PublicExit}" FontSize="16" FontWeight="SemiBold" />
+            <TextBlock Text="{Binding FindingSummary}" Style="{StaticResource Muted}" Margin="0,4,0,16" />
+            <ItemsControl ItemsSource="{Binding Adapters}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:AdapterCard}">
+                        <Border Width="300" Margin="0,0,12,12" Padding="14" CornerRadius="6" BorderThickness="1"
+                                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="10" Height="10" Fill="{Binding Color}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="15" />
+                                    <Border Style="{StaticResource Tag}" Margin="8,0,0,0">
+                                        <TextBlock Text="{Binding Kind}" FontSize="12" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="{Binding Description}" Style="{StaticResource Muted}" FontSize="12" Margin="0,2,0,8" />
+                                <TextBlock Text="{Binding Manager, StringFormat=由 {0} 管理}" Foreground="#7F77DD" Margin="0,0,0,6"
+                                           Visibility="{Binding Manager, Converter={StaticResource NullToVisibility}}" />
+                                <TextBlock Text="承载 IPv4 公网流量" Foreground="#1D9E75" Margin="0,0,0,6"
+                                           Visibility="{Binding CarriesPublicTraffic, Converter={StaticResource BoolToVisibility}}" />
+                                <TextBlock Text="已断开" Foreground="#888780" Margin="0,0,0,6"
+                                           Visibility="{Binding IsUp, Converter={StaticResource InverseBoolToVisibility}}" />
+                                <TextBlock Style="{StaticResource Muted}" Text="地址" />
+                                <TextBlock Text="{Binding Addresses}" TextWrapping="Wrap" Margin="0,0,0,4" />
+                                <TextBlock Style="{StaticResource Muted}" Text="网关" />
+                                <TextBlock Text="{Binding Gateways}" TextWrapping="Wrap" Margin="0,0,0,4" />
+                                <TextBlock Style="{StaticResource Muted}" Text="DNS" />
+                                <TextBlock Text="{Binding Dns}" TextWrapping="Wrap" Margin="0,0,0,4" />
+                                <TextBlock Style="{StaticResource Muted}" Text="网卡跃点" />
+                                <TextBlock Text="{Binding Metrics}" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
