@@ -69,6 +69,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File build/publish.ps1
 
 输出位于 `artifacts/RouteDeck-0.1.0-win-x64.zip`。请将界面与服务保留在同一安装目录。
 
+## 许可证
+
+RouteDeck 的原创代码及资源采用 [PolyForm Noncommercial License 1.0.0](LICENSE)，
+允许许可证规定的非商业使用、修改和分发。商业用途须事先另行获得作者授权，可通过 GitHub 联系作者。
+
+本项目属于源码可见的非商业许可项目，不属于允许商业使用的开源许可项目。
+分发时请保留许可证及 [版权声明](NOTICE)。第三方组件仍遵循各自的许可证。
+
 ## 反馈
 
 通过 [Issues](https://github.com/linnjoy/RouteDeck/issues) 反馈问题。附上 Windows 版本、RouteDeck 版本和复现步骤；提交截图或日志前，请遮盖内网地址、主机名及其他私人信息。
